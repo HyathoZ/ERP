@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import { lazy, Suspense } from "react";
 import { Accounts } from "../pages/financial/Accounts";
@@ -7,6 +7,11 @@ import { PayablesReceivables } from "../pages/financial/PayablesReceivables";
 import { CustomerList } from "../components/customers/CustomerList";
 import { CustomerForm } from "../components/customers/CustomerForm";
 import { CustomerDetails } from "../components/customers/CustomerDetails";
+import { Products } from "../pages/Products";
+import { Orders } from "../pages/Orders";
+import { Companies } from "../pages/Companies";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import { useAuth } from "../hooks/useAuth";
 
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 
@@ -19,10 +24,42 @@ function LoadingFallback() {
   );
 }
 
+// Proteção de rotas
+function RequireAuth({
+  children,
+  allowedRoles = ["USER", "ADMIN", "SUPERADMIN"],
+}: {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}) {
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <ErrorBoundary>
+        <RequireAuth>
+          <Layout />
+        </RequireAuth>
+      </ErrorBoundary>
+    ),
     children: [
       {
         path: "",
@@ -37,15 +74,27 @@ export const router = createBrowserRouter([
         children: [
           {
             path: "accounts",
-            element: <Accounts />,
+            element: (
+              <RequireAuth allowedRoles={["ADMIN", "SUPERADMIN"]}>
+                <Accounts />
+              </RequireAuth>
+            ),
           },
           {
             path: "transactions",
-            element: <Transactions />,
+            element: (
+              <RequireAuth allowedRoles={["ADMIN", "SUPERADMIN"]}>
+                <Transactions />
+              </RequireAuth>
+            ),
           },
           {
             path: "payables-receivables",
-            element: <PayablesReceivables />,
+            element: (
+              <RequireAuth allowedRoles={["ADMIN", "SUPERADMIN"]}>
+                <PayablesReceivables />
+              </RequireAuth>
+            ),
           },
         ],
       },
@@ -72,20 +121,44 @@ export const router = createBrowserRouter([
       },
       {
         path: "products",
-        element: <div>Em construção...</div>,
+        element: <Products />,
       },
       {
         path: "orders",
-        element: <div>Em construção...</div>,
+        element: <Orders />,
       },
       {
-        path: "reports",
-        element: <div>Em construção...</div>,
+        path: "companies",
+        element: (
+          <RequireAuth allowedRoles={["SUPERADMIN"]}>
+            <Companies />
+          </RequireAuth>
+        ),
       },
       {
         path: "settings",
-        element: <div>Em construção...</div>,
+        element: (
+          <RequireAuth allowedRoles={["ADMIN", "SUPERADMIN"]}>
+            <div>Configurações</div>
+          </RequireAuth>
+        ),
       },
     ],
+  },
+  {
+    path: "login",
+    element: <div>Login</div>,
+  },
+  {
+    path: "register",
+    element: <div>Registro</div>,
+  },
+  {
+    path: "unauthorized",
+    element: <div>Acesso não autorizado</div>,
+  },
+  {
+    path: "*",
+    element: <div>Página não encontrada</div>,
   },
 ]);
