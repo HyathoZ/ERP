@@ -1,26 +1,26 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../services/supabase";
-import type { Customer } from "../services/supabase";
+// import { useQuery } from "@tanstack/react-query";
+// import { supabase } from "../services/supabase";
+// import type { Customer } from "../services/supabase";
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: customers, isLoading } = useQuery<Customer[]>({
-    queryKey: ["customers"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("*").order("created_at", { ascending: false });
+  // const { data: customers, isLoading } = useQuery<Customer[]>({
+  //   queryKey: ["customers"],
+  //   queryFn: async () => {
+  //     const { data, error } = await supabase.from("customers").select("*").order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data;
-    },
-  });
+  //     if (error) throw error;
+  //     return data;
+  //   },
+  // });
 
-  const filteredCustomers = customers?.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredCustomers = customers?.filter(
+  //   (customer) =>
+  //     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   return (
     <div className="space-y-6">
@@ -41,52 +41,60 @@ export default function Customers() {
         />
       </div>
 
-      {isLoading ? (
+      {/* {isLoading ? (
         <div>Carregando...</div>
-      ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nome</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Telefone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Endereço
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Ações
-                </th>
+      ) : ( */}
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Nome
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Telefone
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Endereço
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {/* {filteredCustomers?.map((customer) => (
+              <tr key={customer.id}>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <div className="text-sm font-medium text-gray-900">
+                    {customer.name}
+                  </div>
+                </td>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <div className="text-sm text-gray-500">{customer.email}</div>
+                </td>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <div className="text-sm text-gray-500">{customer.phone}</div>
+                </td>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <div className="text-sm text-gray-500">
+                    {customer.address}
+                  </div>
+                </td>
+                <td className="whitespace-nowrap px-6 py-4">
+                  <button className="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                    Editar
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {filteredCustomers?.map((customer) => (
-                <tr key={customer.id}>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-gray-500">{customer.email}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-gray-500">{customer.phone}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-gray-500">{customer.address}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <button className="text-sm font-medium text-indigo-600 hover:text-indigo-900">Editar</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))} */}
+          </tbody>
+        </table>
+      </div>
+      {/* )} */}
     </div>
   );
 }

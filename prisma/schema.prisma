@@ -49,11 +49,11 @@ enum Plan {
 }
 
 model Customer {
-  id            String          @id @default(uuid())
+  id            String         @id @default(uuid())
   name          String
   email         String
   phone         String?
-  document      String?        // CPF/CNPJ
+  document      String? // CPF/CNPJ
   type          CustomerType   @default(INDIVIDUAL)
   address       String?
   city          String?
@@ -82,15 +82,15 @@ enum CustomerStatus {
 }
 
 model Interaction {
-  id          String            @id @default(uuid())
+  id          String          @id @default(uuid())
   type        InteractionType
   description String
   date        DateTime
   customerId  String
-  customer    Customer          @relation(fields: [customerId], references: [id])
+  customer    Customer        @relation(fields: [customerId], references: [id])
   userId      String
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }
 
 enum InteractionType {
@@ -102,19 +102,19 @@ enum InteractionType {
 }
 
 model Opportunity {
-  id          String            @id @default(uuid())
-  title       String
-  value       Float
-  status      OpportunityStatus @default(OPEN)
-  probability Int               @default(50)
+  id                String            @id @default(uuid())
+  title             String
+  value             Float
+  status            OpportunityStatus @default(OPEN)
+  probability       Int               @default(50)
   expectedCloseDate DateTime
-  customerId  String
-  customer    Customer          @relation(fields: [customerId], references: [id])
-  userId      String
-  notes       String?
-  quotes      Quote[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  customerId        String
+  customer          Customer          @relation(fields: [customerId], references: [id])
+  userId            String
+  notes             String?
+  quotes            Quote[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 enum OpportunityStatus {
@@ -127,21 +127,21 @@ enum OpportunityStatus {
 }
 
 model Quote {
-  id            String      @id @default(uuid())
-  number        String      @unique
-  status        QuoteStatus @default(DRAFT)
+  id            String       @id @default(uuid())
+  number        String       @unique
+  status        QuoteStatus  @default(DRAFT)
   customerId    String
-  customer      Customer    @relation(fields: [customerId], references: [id])
+  customer      Customer     @relation(fields: [customerId], references: [id])
   opportunityId String?
   opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
   items         QuoteItem[]
   subtotal      Float
-  discount      Float       @default(0)
+  discount      Float        @default(0)
   total         Float
   notes         String?
   validUntil    DateTime
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 enum QuoteStatus {
@@ -187,19 +187,19 @@ model Product {
 }
 
 model Order {
-  id          String      @id @default(uuid())
-  number      String      @unique
-  customerId  String
-  customer    Customer    @relation(fields: [customerId], references: [id])
-  status      OrderStatus @default(PENDING)
-  items       OrderItem[]
-  subtotal    Float
-  discount    Float       @default(0)
-  total       Float
-  notes       String?
-  companyId   String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String      @id @default(uuid())
+  number     String      @unique
+  customerId String
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  status     OrderStatus @default(PENDING)
+  items      OrderItem[]
+  subtotal   Float
+  discount   Float       @default(0)
+  total      Float
+  notes      String?
+  companyId  String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@map("orders")
 }
@@ -231,18 +231,18 @@ enum OrderStatus {
 
 // Módulo Financeiro
 model Account {
-  id            String         @id @default(uuid())
-  name          String
-  type          AccountType
-  balance       Float          @default(0)
-  bankName      String?
-  bankBranch    String?
-  bankAccount   String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  transactions  Transaction[]
-  payables      Payable[]
-  receivables   Receivable[]
+  id           String        @id @default(uuid())
+  name         String
+  type         AccountType
+  balance      Float         @default(0)
+  bankName     String?
+  bankBranch   String?
+  bankAccount  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  payables     Payable[]
+  receivables  Receivable[]
 }
 
 enum AccountType {
@@ -253,7 +253,7 @@ enum AccountType {
 }
 
 model Transaction {
-  id          String    @id @default(uuid())
+  id          String            @id @default(uuid())
   type        TransactionType
   amount      Float
   description String
@@ -261,9 +261,9 @@ model Transaction {
   category    String
   status      TransactionStatus @default(PENDING)
   accountId   String
-  account     Account   @relation(fields: [accountId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  account     Account           @relation(fields: [accountId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 }
 
 enum TransactionType {
@@ -279,7 +279,7 @@ enum TransactionStatus {
 }
 
 model Payable {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   description String
   amount      Float
   dueDate     DateTime
@@ -287,13 +287,13 @@ model Payable {
   supplier    String
   category    String
   accountId   String
-  account     Account   @relation(fields: [accountId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  account     Account       @relation(fields: [accountId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 model Receivable {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   description String
   amount      Float
   dueDate     DateTime
@@ -301,9 +301,11 @@ model Receivable {
   customer    String
   category    String
   accountId   String
-  account     Account   @relation(fields: [accountId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  account     Account       @relation(fields: [accountId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Customer    Customer?     @relation(fields: [customerId], references: [id])
+  customerId  String?
 }
 
 enum PaymentStatus {
@@ -315,13 +317,13 @@ enum PaymentStatus {
 
 // Módulo de Orçamento
 model Budget {
-  id          String    @id @default(uuid())
-  year        Int
-  month       Int
-  department  String
-  category    String
-  planned     Float
-  actual      Float     @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-} 
+  id         String   @id @default(uuid())
+  year       Int
+  month      Int
+  department String
+  category   String
+  planned    Float
+  actual     Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

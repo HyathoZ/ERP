@@ -1,43 +1,43 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../services/supabase";
-import type { Order } from "../services/supabase";
+// import { useQuery } from "@tanstack/react-query";
+// import { supabase } from "../services/supabase";
+// import type { Order } from "../services/supabase";
 
-const statusColors = {
-  pending: "bg-yellow-100 text-yellow-800",
-  processing: "bg-blue-100 text-blue-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
-};
+// const statusColors = {
+//   pending: "bg-yellow-100 text-yellow-800",
+//   processing: "bg-blue-100 text-blue-800",
+//   completed: "bg-green-100 text-green-800",
+//   cancelled: "bg-red-100 text-red-800",
+// };
 
-const statusLabels = {
-  pending: "Pendente",
-  processing: "Em Processamento",
-  completed: "Concluído",
-  cancelled: "Cancelado",
-};
+// const statusLabels = {
+//   pending: "Pendente",
+//   processing: "Em Processamento",
+//   completed: "Concluído",
+//   cancelled: "Cancelado",
+// };
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: orders, isLoading } = useQuery<Order[]>({
-    queryKey: ["orders"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, customer:customers(name)")
-        .order("created_at", { ascending: false });
+  // const { data: orders, isLoading } = useQuery<Order[]>({
+  //   queryKey: ["orders"],
+  //   queryFn: async () => {
+  //     const { data, error } = await supabase
+  //       .from("orders")
+  //       .select("*, customer:customers(name)")
+  //       .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data;
-    },
-  });
+  //     if (error) throw error;
+  //     return data;
+  //   },
+  // });
 
-  const filteredOrders = orders?.filter(
-    (order) =>
-      order.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredOrders = orders?.filter(
+  //   (order) =>
+  //     order.customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     order.id.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   return (
     <div className="space-y-6">
@@ -58,33 +58,35 @@ export default function Orders() {
         />
       </div>
 
-      {isLoading ? (
+      {/* {isLoading ? (
         <div>Carregando...</div>
-      ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  ID do Pedido
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Cliente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Data</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {filteredOrders?.map((order) => (
+      ) : ( */}
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                ID do Pedido
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Cliente
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Total
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Data
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                Ações
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {/* {filteredOrders?.map((order) => (
                 <tr key={order.id}>
                   <td className="whitespace-nowrap px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">#{order.id}</div>
@@ -118,11 +120,11 @@ export default function Orders() {
                     <button className="text-sm font-medium text-indigo-600 hover:text-indigo-900">Visualizar</button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))} */}
+          </tbody>
+        </table>
+      </div>
+      {/* )} */}
     </div>
   );
 }

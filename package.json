@@ -9,7 +9,9 @@
     "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
     "build": "tsc && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prisma:generate": "prisma generate",
+    "prisma:format": "prisma format"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
