@@ -1,48 +1,62 @@
-import { useState } from "react";
-// import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { supabase } from "../services/supabase";
-// import type { Company, Plan } from "../services/supabase";
+import { useEffect, useState } from "react";
+import { api } from "../lib/api";
+import type { Company, Plan } from "../types";
 import { NewCompanyModal } from "../components/NewCompanyModal";
 
-export default function Companies() {
+export function Companies() {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewCompanyModalOpen, setIsNewCompanyModalOpen] = useState(false);
-  // const queryClient = useQueryClient();
 
-  // const { data: companies, isLoading: isLoadingCompanies } = useQuery<Company[]>({
-  //   queryKey: ["companies"],
-  //   queryFn: async () => {
-  //     const { data, error } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [companiesResponse, plansResponse] = await Promise.all([
+          api.get("/api/companies"),
+          api.get("/api/plans"),
+        ]);
+        setCompanies(companiesResponse.data);
+        setPlans(plansResponse.data);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Erro ao carregar dados";
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-  //     if (error) throw error;
-  //     return data;
-  //   },
-  // });
+    loadData();
+  }, []);
 
-  // const { data: plans } = useQuery<Plan[]>({
-  //   queryKey: ["plans"],
-  //   queryFn: async () => {
-  //     const { data, error } = await supabase.from("plans").select("*").order("price", { ascending: true });
+  const updateCompanyStatus = async (
+    companyId: string,
+    active: boolean,
+    plan: string
+  ) => {
+    try {
+      await api.put(`/api/companies/${companyId}`, { active, plan });
+      setCompanies(
+        companies.map((company) =>
+          company.id === companyId ? { ...company, active, plan } : company
+        )
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Erro ao atualizar empresa";
+      setError(message);
+    }
+  };
 
-  //     if (error) throw error;
-  //     return data;
-  //   },
-  // });
+  const filteredCompanies = companies?.filter((company) =>
+    company.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // const updateCompanyMutation = useMutation({
-  //   mutationFn: async ({ companyId, plan, active }: { companyId: string; plan: string; active: boolean }) => {
-  //     const { error } = await supabase.from("companies").update({ plan, active }).eq("id", companyId);
-
-  //     if (error) throw error;
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["companies"] });
-  //   },
-  // });
-
-  // const filteredCompanies = companies?.filter((company) =>
-  //   company.name.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
+  if (loading) return <div>Carregando...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="space-y-6">
@@ -68,93 +82,49 @@ export default function Companies() {
         />
       </div>
 
-      {/* {isLoadingCompanies ? ( */}
-      {/* <div>Carregando...</div>
-      ) : ( */}
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow">
-        <table className="min-w-full divide-y divide-border">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Empresa
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Plano
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Usuários
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Expira em
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Ações
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border bg-background">
-            {/* {filteredCompanies?.map((company) => (
-                <tr key={company.id}>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm font-medium text-card-foreground">{company.name}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <select
-                      value={company.plan}
-                      onChange={(e) =>
-                        updateCompanyMutation.mutate({
-                          companyId: company.id,
-                          plan: e.target.value,
-                          active: company.active,
-                        })
-                      }
-                      className="rounded-md border border-input bg-background px-2 py-1 text-sm text-card-foreground"
-                    >
-                      {plans?.map((plan) => (
-                        <option key={plan.id} value={plan.type}>
-                          {plan.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <button
-                      onClick={() =>
-                        updateCompanyMutation.mutate({
-                          companyId: company.id,
-                          plan: company.plan,
-                          active: !company.active,
-                        })
-                      }
-                      className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                        company.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {company.active ? "Ativo" : "Inativo"}
-                    </button>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-card-foreground">
-                      {company.current_users} / {company.max_users}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(company.expires_at).toLocaleDateString("pt-BR")}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <button className="text-sm font-medium text-primary hover:text-primary/90">Gerenciar</button>
-                  </td>
-                </tr>
-              ))} */}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredCompanies?.map((company) => (
+          <div key={company.id} className="rounded-lg border p-4">
+            <h2>{company.name}</h2>
+            <p>Plano: {company.plan}</p>
+            <p>Status: {company.active ? "Ativo" : "Inativo"}</p>
+            <p>
+              Usuários: {company.current_users}/{company.max_users}
+            </p>
+            <div className="mt-4">
+              <select
+                value={company.plan}
+                onChange={(e) =>
+                  updateCompanyStatus(
+                    company.id,
+                    company.active,
+                    e.target.value
+                  )
+                }
+                className="mr-2 rounded border p-1"
+              >
+                {plans.map((plan) => (
+                  <option key={plan.id} value={plan.type}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() =>
+                  updateCompanyStatus(company.id, !company.active, company.plan)
+                }
+                className={`rounded px-2 py-1 ${
+                  company.active
+                    ? "bg-red-500 text-white"
+                    : "bg-green-500 text-white"
+                }`}
+              >
+                {company.active ? "Desativar" : "Ativar"}
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-      {/* )} */}
 
       <NewCompanyModal
         isOpen={isNewCompanyModalOpen}

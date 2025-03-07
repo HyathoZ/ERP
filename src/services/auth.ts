@@ -1,4 +1,5 @@
-import { api } from "./api";
+import { api } from "../lib/api";
+import { AxiosError } from "axios";
 
 export type User = {
   id: string;
@@ -9,114 +10,114 @@ export type User = {
 
 type AuthResponse = {
   user: User;
-  message?: string;
+  token: string;
 };
+
+type ApiError = AxiosError<{ message: string }>;
 
 export const authService = {
   // Criar conta
   async signUp(email: string, password: string, name: string): Promise<User> {
     try {
-      const response = await api.post<User>("/auth/register", {
+      console.log("Tentando criar conta com:", { email, name });
+      const response = await api.post<AuthResponse>("/api/auth/register", {
         email,
         password,
         name,
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
+      // Salvar o token
+      localStorage.setItem("@erp:token", response.data.token);
+      console.log("Conta criada com sucesso");
 
-      return response.data;
+      return response.data.user;
     } catch (error) {
-      console.error("Erro ao criar conta:", error);
-      throw error;
+      const apiError = error as ApiError;
+      console.error("Erro ao criar conta:", apiError.response?.data?.message || apiError.message);
+      throw apiError;
     }
   },
 
   // Login
   async signIn(email: string, password: string): Promise<User> {
     try {
-      const response = await api.post<User>("/auth/login", {
+      console.log("Tentando fazer login com:", email);
+      const response = await api.post<AuthResponse>("/api/auth/login", {
         email,
         password,
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
+      // Salvar o token
+      localStorage.setItem("@erp:token", response.data.token);
+      console.log("Login realizado com sucesso");
 
-      return response.data;
+      return response.data.user;
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
-      throw error;
+      const apiError = error as ApiError;
+      console.error("Erro ao fazer login:", apiError.response?.data?.message || apiError.message);
+      throw apiError;
     }
   },
 
   // Logout
   async signOut(): Promise<{ success: boolean }> {
     try {
-      const response = await api.post<{ success: boolean }>("/auth/logout", {});
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
+      console.log("Fazendo logout");
+      const response = await api.post<{ success: boolean }>("/api/auth/logout", {});
+      localStorage.removeItem("@erp:token");
+      console.log("Logout realizado com sucesso");
       return response.data;
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      throw error;
+      const apiError = error as ApiError;
+      console.error("Erro ao fazer logout:", apiError.response?.data?.message || apiError.message);
+      throw apiError;
     }
   },
 
   // Recuperar senha
   async resetPassword(email: string): Promise<{ success: boolean }> {
     try {
-      // Implementar lógica de reset de senha
-      const response = await api.post<{ success: boolean }>("/auth/reset-password", {
+      console.log("Solicitando recuperação de senha para:", email);
+      const response = await api.post<{ success: boolean }>("/api/auth/reset-password", {
         email,
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
+      console.log("Solicitação de recuperação de senha enviada");
       return response.data;
     } catch (error) {
-      console.error("Erro ao solicitar recuperação de senha:", error);
-      throw error;
+      const apiError = error as ApiError;
+      console.error("Erro ao solicitar recuperação de senha:", apiError.response?.data?.message || apiError.message);
+      throw apiError;
     }
   },
 
   // Atualizar senha
   async updatePassword(userId: string, newPassword: string): Promise<{ success: boolean }> {
     try {
-      const response = await api.put<{ success: boolean }>(`/auth/password/${userId}`, {
+      console.log("Atualizando senha do usuário:", userId);
+      const response = await api.put<{ success: boolean }>(`/api/auth/password/${userId}`, {
         password: newPassword,
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
+      console.log("Senha atualizada com sucesso");
       return response.data;
     } catch (error) {
-      console.error("Erro ao atualizar senha:", error);
-      throw error;
+      const apiError = error as ApiError;
+      console.error("Erro ao atualizar senha:", apiError.response?.data?.message || apiError.message);
+      throw apiError;
     }
   },
 
   // Obter usuário atual
   async getCurrentUser(): Promise<User | null> {
     try {
-      const response = await api.get<User>("/auth/me");
-
-      if (response.error) {
-        return null;
-      }
-
-      return response.data;
+      console.log("Obtendo usuário atual");
+      const response = await api.get<{ user: User }>("/api/auth/me");
+      console.log("Usuário atual obtido com sucesso");
+      return response.data.user;
     } catch (error) {
-      console.error("Erro ao obter usuário atual:", error);
+      const apiError = error as ApiError;
+      console.error("Erro ao obter usuário atual:", apiError.response?.data?.message || apiError.message);
       return null;
     }
   },
@@ -124,16 +125,14 @@ export const authService = {
   // Atualizar dados do usuário
   async updateProfile(userId: string, data: { name?: string; email?: string }): Promise<User> {
     try {
-      const response = await api.put<User>(`/auth/profile/${userId}`, data);
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
+      console.log("Atualizando perfil do usuário:", userId, data);
+      const response = await api.put<User>(`/api/auth/profile/${userId}`, data);
+      console.log("Perfil atualizado com sucesso");
       return response.data;
     } catch (error) {
-      console.error("Erro ao atualizar perfil:", error);
-      throw error;
+      const apiError = error as ApiError;
+      console.error("Erro ao atualizar perfil:", apiError.response?.data?.message || apiError.message);
+      throw apiError;
     }
   },
 };

@@ -16,6 +16,7 @@ model User {
   name      String
   password  String
   role      Role     @default(USER)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -65,9 +66,10 @@ model Customer {
   opportunities Opportunity[]
   quotes        Quote[]
   orders        Order[]
-  receivables   Receivable[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@map("customers")
 }
 
 enum CustomerType {
@@ -89,8 +91,10 @@ model Interaction {
   customerId  String
   customer    Customer        @relation(fields: [customerId], references: [id])
   userId      String
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("interactions")
 }
 
 enum InteractionType {
@@ -108,13 +112,15 @@ model Opportunity {
   status            OpportunityStatus @default(OPEN)
   probability       Int               @default(50)
   expectedCloseDate DateTime
-  customerId        String
-  customer          Customer          @relation(fields: [customerId], references: [id])
-  userId            String
-  notes             String?
-  quotes            Quote[]
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  customerId  String
+  customer    Customer          @relation(fields: [customerId], references: [id])
+  userId      String
+  notes       String?
+  quotes      Quote[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("opportunities")
 }
 
 enum OpportunityStatus {
@@ -140,8 +146,10 @@ model Quote {
   total         Float
   notes         String?
   validUntil    DateTime
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("quotes")
 }
 
 enum QuoteStatus {
@@ -165,6 +173,8 @@ model QuoteItem {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("quote_items")
 }
 
 model Product {

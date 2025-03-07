@@ -1,59 +1,68 @@
-# Sistema ERP Web
+# ERP System
 
-Um sistema ERP moderno e completo desenvolvido com React, TypeScript e Supabase.
+Um sistema ERP moderno e completo desenvolvido com React e TypeScript.
 
-## Tecnologias Utilizadas
+## Tecnologias Principais
 
-- React 18
+- React
 - TypeScript
-- Vite
 - Tailwind CSS
-- Supabase (Banco de dados e autenticação)
-- React Query
-- React Router DOM
-- Zustand (Gerenciamento de estado)
-- React Hook Form
-- Zod (Validação)
+- Node.js
+- PostgreSQL
+- Prisma ORM
 
 ## Funcionalidades
 
-- ✅ Autenticação de usuários
-- ✅ Dashboard com métricas importantes
-- ✅ Gerenciamento de clientes
-- ✅ Gerenciamento de produtos
-- ✅ Gerenciamento de pedidos
-- ✅ Configurações do sistema
-- ✅ Interface responsiva e moderna
+- Autenticação e Autorização
+- Gestão de Usuários
+- Gestão de Empresas
+- Módulo Financeiro
+  - Contas bancárias
+  - Transações
+  - Orçamentos
+- Módulo de Vendas
+  - Produtos
+  - Pedidos
+  - Clientes
 
 ## Pré-requisitos
 
 - Node.js 18+
-- npm ou yarn
-- Conta no Supabase
+- PostgreSQL
+- NPM ou Yarn
 
 ## Configuração
 
-1. Clone o repositório:
+1. Clone o repositório
 
 ```bash
-git clone https://seu-repositorio/erp-web.git
-cd erp-web
+git clone https://github.com/seu-usuario/erp.git
+cd erp
 ```
 
-2. Instale as dependências:
+2. Instale as dependências
 
 ```bash
 npm install
 # ou
-yarn
+yarn install
 ```
 
-3. Configure as variáveis de ambiente:
+3. Configure as variáveis de ambiente
 
-- Copie o arquivo `.env.example` para `.env`
-- Preencha as variáveis com suas credenciais do Supabase
+```bash
+cp .env.example .env
+```
 
-4. Inicie o servidor de desenvolvimento:
+4. Preencha as variáveis com suas configurações
+
+5. Execute as migrações do banco de dados
+
+```bash
+npx prisma migrate dev
+```
+
+6. Inicie o servidor de desenvolvimento
 
 ```bash
 npm run dev
@@ -85,14 +94,14 @@ src/
 - `npm run preview`: Visualiza a build de produção localmente
 - `npm run lint`: Executa o linter
 
-## Contribuição
+## Contribuindo
 
-1. Faça o fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
-4. Faça push para a branch (`git push origin feature/nova-feature`)
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
 ## Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para mais detalhes.

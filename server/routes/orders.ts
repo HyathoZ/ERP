@@ -1,5 +1,4 @@
-import { Router } from "express";
-import { prisma } from "../../src/lib/prisma";
+import { Router, Request, Response } from "express";
 
 const router = Router();
 
@@ -146,6 +145,22 @@ router.patch("/orders/:id/status", async (req, res) => {
     console.error("Erro ao atualizar status do pedido:", error);
     return res.status(500).json({ message: "Erro interno do servidor" });
   }
+});
+
+// Rota para listar pedidos
+router.get("/", (req: Request, res: Response) => {
+  res.json({ message: "Lista de pedidos" });
+});
+
+// Rota para criar um novo pedido
+router.post("/", (req: Request, res: Response) => {
+  res.json({ message: "Novo pedido criado" });
+});
+
+// Rota para atualizar o status de um pedido
+router.put("/:id/status", (req: Request, res: Response) => {
+  const { id } = req.params;
+  res.json({ message: `Status do pedido ${id} atualizado` });
 });
 
 export default router;

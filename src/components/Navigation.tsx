@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Wallet,
@@ -9,7 +10,12 @@ import {
   FileText,
   Settings,
   BarChart,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 const menuItems = [
   {
@@ -80,25 +86,46 @@ const menuItems = [
 ];
 
 export function Navigation() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
-    <nav className="space-y-6">
-      {menuItems.map((section) => (
-        <div key={section.title} className="px-3 py-2">
-          <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">{section.title}</h2>
-          <div className="space-y-1">
-            {section.items.map((item) => (
-              <Link
-                key={item.href}
-                to={item.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                {item.icon}
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-      ))}
-    </nav>
+    <div className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute -right-4 top-2 hidden md:flex"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      </Button>
+      <nav className={cn("space-y-4 transition-all duration-300", isCollapsed ? "w-[60px]" : "w-[240px]")}>
+        <TooltipProvider delayDuration={0}>
+          {menuItems.map((section) => (
+            <div key={section.title} className="px-3 py-2">
+              {!isCollapsed && <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">{section.title}</h2>}
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <Tooltip key={item.href} delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors",
+                          isCollapsed && "justify-center px-2"
+                        )}
+                      >
+                        {item.icon}
+                        {!isCollapsed && item.label}
+                      </Link>
+                    </TooltipTrigger>
+                    {isCollapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
+                  </Tooltip>
+                ))}
+              </div>
+            </div>
+          ))}
+        </TooltipProvider>
+      </nav>
+    </div>
   );
 }
