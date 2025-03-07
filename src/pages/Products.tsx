@@ -13,7 +13,7 @@ export function Products() {
         const response = await api.get("/api/products");
         setProducts(response.data);
       } catch (err) {
-        setError("Erro ao carregar produtos");
+        setError("Erro ao carregar produtos" + err);
       } finally {
         setLoading(false);
       }
@@ -33,8 +33,14 @@ export function Products() {
           <div key={product.id} className="rounded-lg border p-4">
             <h2>{product.name}</h2>
             <p>{product.description}</p>
-            <p>Preço: R$ {product.price}</p>
-            <p>Estoque: {product.stock}</p>
+            <p>
+              Preço: R$ 0,00
+              {/* {product?.price}  */}
+            </p>
+            <p>
+              Estoque: 0,00
+              {/* {product?.stock} */}
+            </p>
           </div>
         ))}
       </div>

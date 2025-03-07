@@ -9,11 +9,19 @@ export type TransactionStatus = "pending" | "paid" | "cancelled";
 
 export type DocumentType = "cpf" | "cnpj";
 
-export type ServiceOrderStatus = "pending" | "in_progress" | "completed" | "cancelled";
+export type ServiceOrderStatus =
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export type ServiceOrderPriority = "low" | "medium" | "high" | "urgent";
 
-export type ProductionOrderStatus = "planned" | "in_progress" | "completed" | "cancelled";
+export type ProductionOrderStatus =
+  | "planned"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export type EmployeeStatus = "active" | "inactive" | "vacation" | "leave";
 

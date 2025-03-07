@@ -6,7 +6,14 @@ import type { PlanType } from "../types";
 interface NewCompanyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (data: any) => void;
+  onSuccess: (data: CompanyData) => void;
+}
+
+interface CompanyData {
+  id: string;
+  name: string;
+  email: string;
+  plan: PlanType;
 }
 
 export function NewCompanyModal({
@@ -21,12 +28,12 @@ export function NewCompanyModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
     setError("");
 
-    const formData = new FormData(event.target);
+    const formData = new FormData(event.target as HTMLFormElement);
     const data = {
       name: formData.get("name"),
       email: formData.get("email"),
@@ -40,7 +47,11 @@ export function NewCompanyModal({
       onSuccess(response.data);
       onClose();
     } catch (error) {
-      setError(error.message || "Erro ao criar empresa");
+      if (error instanceof Error) {
+        setError(error.message || "Erro ao criar empresa");
+      } else {
+        setError("Erro ao criar empresa");
+      }
     } finally {
       setLoading(false);
     }
@@ -127,8 +138,8 @@ export function NewCompanyModal({
             </label>
             <select
               id="plan"
-              // value={plan}
-              // onChange={(e) => setPlan(e.target.value as PlanType)}
+              value={plan}
+              onChange={(e) => setPlan(e.target.value as PlanType)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-card-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="basic">Básico (5 usuários)</option>

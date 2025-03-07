@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import type { Company, Plan } from "../types";
+import type { Company, Plan, PlanType } from "../types";
 import { NewCompanyModal } from "../components/NewCompanyModal";
 
 export function Companies() {
@@ -39,9 +39,11 @@ export function Companies() {
   ) => {
     try {
       await api.put(`/api/companies/${companyId}`, { active, plan });
-      setCompanies(
-        companies.map((company) =>
-          company.id === companyId ? { ...company, active, plan } : company
+      setCompanies((prevCompanies) =>
+        prevCompanies.map((company) =>
+          company.id === companyId
+            ? { ...company, active, plan: plan as PlanType }
+            : company
         )
       );
     } catch (error) {
@@ -129,6 +131,10 @@ export function Companies() {
       <NewCompanyModal
         isOpen={isNewCompanyModalOpen}
         onClose={() => setIsNewCompanyModalOpen(false)}
+        onSuccess={
+          () => console.log("opa")
+          // (data: Company) => setCompanies((prevCompanies) => [...prevCompanies, data])
+        }
       />
     </div>
   );
