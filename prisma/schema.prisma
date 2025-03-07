@@ -1,0 +1,327 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+model Company {
+  id           String   @id @default(uuid())
+  name         String
+  plan         Plan     @default(BASIC)
+  active       Boolean  @default(true)
+  maxUsers     Int      @default(5)
+  currentUsers Int      @default(1)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  updatedAt    DateTime @updatedAt
+
+  @@map("companies")
+}
+
+enum Plan {
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+model Customer {
+  id            String          @id @default(uuid())
+  name          String
+  email         String
+  phone         String?
+  document      String?        // CPF/CNPJ
+  type          CustomerType   @default(INDIVIDUAL)
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  status        CustomerStatus @default(ACTIVE)
+  companyId     String
+  interactions  Interaction[]
+  opportunities Opportunity[]
+  quotes        Quote[]
+  orders        Order[]
+  receivables   Receivable[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+model Interaction {
+  id          String            @id @default(uuid())
+  type        InteractionType
+  description String
+  date        DateTime
+  customerId  String
+  customer    Customer          @relation(fields: [customerId], references: [id])
+  userId      String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+enum InteractionType {
+  CALL
+  EMAIL
+  MEETING
+  WHATSAPP
+  OTHER
+}
+
+model Opportunity {
+  id          String            @id @default(uuid())
+  title       String
+  value       Float
+  status      OpportunityStatus @default(OPEN)
+  probability Int               @default(50)
+  expectedCloseDate DateTime
+  customerId  String
+  customer    Customer          @relation(fields: [customerId], references: [id])
+  userId      String
+  notes       String?
+  quotes      Quote[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+enum OpportunityStatus {
+  OPEN
+  PROPOSAL_SENT
+  NEGOTIATING
+  WON
+  LOST
+  CANCELLED
+}
+
+model Quote {
+  id            String      @id @default(uuid())
+  number        String      @unique
+  status        QuoteStatus @default(DRAFT)
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  opportunityId String?
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+  items         QuoteItem[]
+  subtotal      Float
+  discount      Float       @default(0)
+  total         Float
+  notes         String?
+  validUntil    DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model QuoteItem {
+  id        String   @id @default(uuid())
+  quoteId   String
+  quote     Quote    @relation(fields: [quoteId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Float
+  discount  Float    @default(0)
+  total     Float
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  cost        Float?
+  stock       Int         @default(0)
+  minStock    Int         @default(0)
+  category    String?
+  unit        String      @default("UN")
+  active      Boolean     @default(true)
+  companyId   String
+  quoteItems  QuoteItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("products")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  number      String      @unique
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  status      OrderStatus @default(PENDING)
+  items       OrderItem[]
+  subtotal    Float
+  discount    Float       @default(0)
+  total       Float
+  notes       String?
+  companyId   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  quantity  Int
+  unitPrice Float
+  discount  Float    @default(0)
+  total     Float
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// Módulo Financeiro
+model Account {
+  id            String         @id @default(uuid())
+  name          String
+  type          AccountType
+  balance       Float          @default(0)
+  bankName      String?
+  bankBranch    String?
+  bankAccount   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  transactions  Transaction[]
+  payables      Payable[]
+  receivables   Receivable[]
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  INVESTMENT
+  CASH
+}
+
+model Transaction {
+  id          String    @id @default(uuid())
+  type        TransactionType
+  amount      Float
+  description String
+  date        DateTime
+  category    String
+  status      TransactionStatus @default(PENDING)
+  accountId   String
+  account     Account   @relation(fields: [accountId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+model Payable {
+  id          String    @id @default(uuid())
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      PaymentStatus @default(PENDING)
+  supplier    String
+  category    String
+  accountId   String
+  account     Account   @relation(fields: [accountId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Receivable {
+  id          String    @id @default(uuid())
+  description String
+  amount      Float
+  dueDate     DateTime
+  status      PaymentStatus @default(PENDING)
+  customer    String
+  category    String
+  accountId   String
+  account     Account   @relation(fields: [accountId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// Módulo de Orçamento
+model Budget {
+  id          String    @id @default(uuid())
+  year        Int
+  month       Int
+  department  String
+  category    String
+  planned     Float
+  actual      Float     @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+} 

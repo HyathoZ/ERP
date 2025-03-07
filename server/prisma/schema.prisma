@@ -1,0 +1,364 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuários e Autenticação
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(user)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  employee  Employee?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  user
+  admin
+  superadmin
+}
+
+// Empresas
+model Company {
+  id          String    @id @default(uuid())
+  name        String
+  document    String    @unique
+  email       String
+  phone       String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  status      Status    @default(active)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users          User[]
+  customers      Customer[]
+  suppliers      Supplier[]
+  carriers       Carrier[]
+  roles          Role[]
+  employees      Employee[]
+  products       Product[]
+  orders         Order[]
+  serviceOrders  ServiceOrder[]
+  financial      Financial[]
+
+  @@map("companies")
+}
+
+enum Status {
+  active
+  inactive
+}
+
+// Clientes
+model Customer {
+  id          String       @id @default(uuid())
+  name        String
+  email       String
+  phone       String
+  document    String
+  type        CustomerType @default(individual)
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  status      Status       @default(active)
+  companyId   String
+  company     Company      @relation(fields: [companyId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  orders      Order[]
+  financials  Financial[]
+  serviceOrders ServiceOrder[]
+
+  @@map("customers")
+}
+
+enum CustomerType {
+  individual
+  company
+}
+
+// Produtos
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  description   String
+  category      String
+  brand         String?
+  model         String?
+  sku           String?  @unique
+  barcode       String?  @unique
+  price         Decimal
+  cost          Decimal
+  stock         Int
+  minStock      Int
+  maxStock      Int?
+  location      String?
+  unit          String
+  weight        Float?
+  width         Float?
+  height        Float?
+  length        Float?
+  status        Status   @default(active)
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orderItems    OrderItem[]
+  serviceOrderItems ServiceOrderItem[]
+
+  @@map("products")
+}
+
+// Pedidos
+model Order {
+  id         String      @id @default(uuid())
+  number     String      @unique
+  customerId String
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  status     OrderStatus @default(pending)
+  subtotal   Decimal
+  discount   Decimal
+  total      Decimal
+  notes      String?
+  companyId  String
+  company    Company     @relation(fields: [companyId], references: [id])
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  items      OrderItem[]
+  financials Financial[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal
+  discount  Decimal
+  total     Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  pending
+  approved
+  cancelled
+  completed
+}
+
+// Financeiro
+model Financial {
+  id           String    @id @default(uuid())
+  type         String    // income ou expense
+  category     String
+  description  String
+  amount       Float
+  dueDate      DateTime
+  status       String    @default("pending") // pending, paid, cancelled
+  paymentDate  DateTime?
+  paymentMethod String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relacionamentos
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id])
+  customerId   String?
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  orderId      String?
+  order        Order?    @relation(fields: [orderId], references: [id])
+
+  @@map("financials")
+}
+
+enum FinancialType {
+  income
+  expense
+}
+
+enum FinancialStatus {
+  pending
+  paid
+  cancelled
+}
+
+// Fornecedores
+model Supplier {
+  id          String   @id @default(uuid())
+  name        String
+  document    String   @unique
+  email       String?
+  phone       String?
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  status      Status   @default(active)
+  type        String   // individual ou company
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+// Transportadoras
+model Carrier {
+  id          String   @id @default(uuid())
+  name        String
+  document    String   @unique
+  email       String?
+  phone       String?
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  status      Status   @default(active)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("carriers")
+}
+
+// Cargos
+model Role {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  status      Status       @default(active)
+  companyId   String
+  company     Company      @relation(fields: [companyId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  employees   Employee[]
+
+  @@map("roles")
+}
+
+// Funcionários
+model Employee {
+  id            String   @id @default(uuid())
+  name          String
+  document      String   @unique
+  email         String?
+  phone         String?
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  birthDate     DateTime
+  hireDate      DateTime
+  status        Status   @default(active)
+  roleId        String
+  role          Role     @relation(fields: [roleId], references: [id])
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  userId        String?  @unique
+  user          User?    @relation(fields: [userId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  serviceOrders ServiceOrder[]
+  history       ServiceOrderHistory[]
+
+  @@map("employees")
+}
+
+// Ordens de Serviço
+model ServiceOrder {
+  id          String   @id @default(uuid())
+  number      String   @unique
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  status      ServiceOrderStatus @default(pending)
+  priority    ServiceOrderPriority @default(normal)
+  description String
+  problem     String
+  solution    String?
+  startDate   DateTime
+  endDate     DateTime?
+  notes       String?
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  history     ServiceOrderHistory[]
+  items       ServiceOrderItem[]
+
+  @@map("service_orders")
+}
+
+// Itens da Ordem de Serviço
+model ServiceOrderItem {
+  id              String       @id @default(uuid())
+  serviceOrderId  String
+  serviceOrder    ServiceOrder @relation(fields: [serviceOrderId], references: [id])
+  productId       String
+  product         Product      @relation(fields: [productId], references: [id])
+  quantity        Int
+  unitPrice       Decimal
+  discount        Decimal
+  total           Decimal
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("service_order_items")
+}
+
+// Histórico da Ordem de Serviço
+model ServiceOrderHistory {
+  id              String       @id @default(uuid())
+  serviceOrderId  String
+  serviceOrder    ServiceOrder @relation(fields: [serviceOrderId], references: [id])
+  status          ServiceOrderStatus
+  description     String
+  employeeId      String
+  employee        Employee     @relation(fields: [employeeId], references: [id])
+  createdAt       DateTime     @default(now())
+
+  @@map("service_order_history")
+}
+
+enum ServiceOrderStatus {
+  pending
+  in_progress
+  waiting_parts
+  waiting_approval
+  approved
+  completed
+  cancelled
+}
+
+enum ServiceOrderPriority {
+  low
+  normal
+  high
+  urgent
+} 
