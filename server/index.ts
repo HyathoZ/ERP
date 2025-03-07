@@ -33,6 +33,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Configurações de segurança
@@ -104,7 +105,7 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 // Rotas de autenticação
-app.post("/api/auth/register", async (req: Request, res: Response) => {
+router.post("/auth/register", async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body;
 
@@ -144,7 +145,7 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
   }
 });
 
-app.post("/api/auth/login", async (req: Request, res: Response) => {
+router.post("/auth/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -179,7 +180,7 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/api/auth/me", authenticate, async (req: Request, res: Response) => {
+router.get("/auth/me", authenticate, async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       return res.status(401).json({ message: "Usuário não autenticado" });
@@ -199,11 +200,11 @@ app.get("/api/auth/me", authenticate, async (req: Request, res: Response) => {
   }
 });
 
-app.post("/api/auth/logout", (req, res) => {
+router.post("/auth/logout", (req, res) => {
   return res.json({ success: true });
 });
 
-app.put("/api/auth/password/:userId", async (req, res) => {
+router.put("/auth/password/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { password } = req.body;
@@ -222,7 +223,7 @@ app.put("/api/auth/password/:userId", async (req, res) => {
   }
 });
 
-app.put("/api/auth/profile/:userId", async (req, res) => {
+router.put("/auth/profile/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { name, email } = req.body;
@@ -257,7 +258,7 @@ app.put("/api/auth/profile/:userId", async (req, res) => {
   }
 });
 
-app.post("/api/auth/reset-password", async (req, res) => {
+router.post("/auth/reset-password", async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -278,13 +279,16 @@ app.post("/api/auth/reset-password", async (req, res) => {
   }
 });
 
-app.get("/api/health", (req, res) => {
+router.get("/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
   });
 });
+
+// Registra o router com o prefixo /api
+app.use("/api", router);
 
 // Inicialização do servidor
 const PORT = Number(process.env.PORT) || 3001;
