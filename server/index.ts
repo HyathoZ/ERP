@@ -3,10 +3,26 @@ import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import "./types/express";
+import "dotenv/config";
+
+// Tipos personalizados
+declare global {
+  namespace Express {
+    interface User {
+      id: string;
+      email: string;
+      name: string;
+      role: Role;
+      active: boolean;
+    }
+
+    interface Request {
+      user?: User;
+    }
+  }
+}
 
 const prisma = new PrismaClient({
   log: ["query", "info", "warn", "error"],
@@ -22,6 +38,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Configurações de segurança
 app.use(helmet());
 
+// Configuração do CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:5173"];
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -33,41 +58,19 @@ app.use(limiter);
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Log de todas as requisições
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  console.log("Headers:", req.headers);
-  console.log("Body:", req.body);
-  next();
-});
-
-// CORS configurado apenas para ambientes permitidos
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      console.log("Origin:", origin);
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("Origin not allowed:", origin);
-        callback(new Error("Não permitido pelo CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["Content-Length", "X-Requested-With"],
-  })
-);
-
 // Middleware de log
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
+});
+
+// Middleware de tratamento de erros
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: "Erro interno do servidor",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
 // Middleware de autenticação
@@ -103,53 +106,41 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
 // Rotas de autenticação
 app.post("/api/auth/register", async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
-
-    // Validação
-    if (!email?.trim() || !password?.trim() || !name?.trim()) {
-      return res.status(400).json({ message: "Todos os campos são obrigatórios" });
-    }
-
-    if (password.length < 8) {
-      return res.status(400).json({ message: "A senha deve ter no mínimo 8 caracteres" });
-    }
+    const { name, email, password } = req.body;
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email },
     });
 
     if (existingUser) {
-      return res.status(400).json({ message: "E-mail já está em uso" });
+      return res.status(400).json({ error: "Email já cadastrado" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const userData: Prisma.UserCreateInput = {
-      email: email.toLowerCase(),
-      name,
-      password: hashedPassword,
-      role: Role.USER,
-      active: true,
-    };
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: userData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: Role.USER,
       },
     });
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
 
-    return res.json({ user, token });
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      token,
+    });
   } catch (error) {
-    console.error("Erro ao criar conta:", error);
-    return res.status(500).json({ message: "Erro interno do servidor" });
+    console.error("Erro ao registrar usuário:", error);
+    res.status(500).json({ error: "Erro ao criar usuário" });
   }
 });
 
@@ -157,40 +148,34 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "E-mail e senha são obrigatórios" });
-    }
-
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
     if (!user) {
-      return res.status(401).json({ message: "E-mail ou senha incorretos" });
+      return res.status(401).json({ error: "Credenciais inválidas" });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const validPassword = await bcrypt.compare(password, user.password);
 
-    if (!isValidPassword) {
-      return res.status(401).json({ message: "E-mail ou senha incorretos" });
+    if (!validPassword) {
+      return res.status(401).json({ error: "Credenciais inválidas" });
     }
 
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
 
-    return res.json({
+    res.json({
       user: {
         id: user.id,
-        email: user.email,
         name: user.name,
+        email: user.email,
         role: user.role,
       },
       token,
     });
   } catch (error) {
     console.error("Erro ao fazer login:", error);
-    return res.status(500).json({ message: "Erro interno do servidor" });
+    res.status(500).json({ error: "Erro ao fazer login" });
   }
 });
 
@@ -294,24 +279,16 @@ app.post("/api/auth/reset-password", async (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
-// Tratamento global de erros
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ message: "Erro interno do servidor" });
-  next(err); // Necessário para o Express saber que o erro foi tratado
-});
-
-// Tratamento de rotas não encontradas
-app.use((req: Request, res: Response) => {
-  res.status(404).json({ message: "Rota não encontrada" });
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+  });
 });
 
 // Inicialização do servidor
 const PORT = Number(process.env.PORT) || 3001;
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = process.env.HOST || "localhost";
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`[${new Date().toISOString()}] Servidor iniciado em http://${HOST}:${PORT}`);
@@ -331,10 +308,16 @@ server.on("error", (error: NodeJS.ErrnoException) => {
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("Recebido SIGTERM. Encerrando servidor...");
-  process.exit(0);
+  server.close(() => {
+    prisma.$disconnect();
+    process.exit(0);
+  });
 });
 
 process.on("SIGINT", () => {
   console.log("Recebido SIGINT. Encerrando servidor...");
-  process.exit(0);
+  server.close(() => {
+    prisma.$disconnect();
+    process.exit(0);
+  });
 });
