@@ -1,11 +1,8 @@
-import type { UserRole } from "../services/supabase";
+export type UserRole = "USER" | "ADMIN" | "SUPERADMIN";
 
-export interface User {
+export type User = {
   id: string;
   email: string;
-  name: string | null;
+  name: string;
   role: UserRole;
-  avatar_url: string | null;
-  company_id: string | null;
-  created_at: string;
-}
+};

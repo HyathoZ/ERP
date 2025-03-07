@@ -1,72 +1,46 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../services/supabase";
-import type { PlanType } from "../services/supabase";
+import { api } from "../lib/api";
+import type { PlanType } from "../types";
 
 interface NewCompanyModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: (data: any) => void;
 }
 
-export function NewCompanyModal({ isOpen, onClose }: NewCompanyModalProps) {
+export function NewCompanyModal({ isOpen, onClose, onSuccess }: NewCompanyModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [plan, setPlan] = useState<PlanType>("basic");
-  const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const createCompanyMutation = useMutation({
-    mutationFn: async () => {
-      // 1. Criar usuário admin no Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Erro ao criar usuário");
+    const formData = new FormData(event.target);
+    const data = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      password: formData.get("password"),
+      companyName: formData.get("companyName"),
+      plan: formData.get("plan") as PlanType,
+    };
 
-      // 2. Criar empresa
-      const { data: companyData, error: companyError } = await supabase
-        .from("companies")
-        .insert([
-          {
-            name,
-            plan,
-            active: true,
-            max_users: plan === "basic" ? 5 : plan === "professional" ? 10 : 20,
-            current_users: 1,
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
-          },
-        ])
-        .select()
-        .single();
-
-      if (companyError) throw companyError;
-
-      // 3. Criar usuário admin na tabela users
-      const { error: userError } = await supabase.from("users").insert([
-        {
-          id: authData.user.id,
-          email,
-          name: "Administrador",
-          role: "admin",
-          company_id: companyData.id,
-        },
-      ]);
-
-      if (userError) throw userError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
+    try {
+      const response = await api.post("/api/companies", data);
+      onSuccess(response.data);
       onClose();
-      setName("");
-      setEmail("");
-      setPassword("");
-      setPlan("basic");
-    },
-  });
+    } catch (error) {
+      setError(error.message || "Erro ao criar empresa");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -80,13 +54,7 @@ export function NewCompanyModal({ isOpen, onClose }: NewCompanyModalProps) {
           </button>
         </div>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            createCompanyMutation.mutate();
-          }}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-medium text-card-foreground">
               Nome da Empresa
@@ -148,11 +116,7 @@ export function NewCompanyModal({ isOpen, onClose }: NewCompanyModalProps) {
             </select>
           </div>
 
-          {createCompanyMutation.error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-              Erro ao criar empresa. Tente novamente.
-            </div>
-          )}
+          {error && <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
           <div className="flex justify-end space-x-2">
             <button
@@ -164,10 +128,10 @@ export function NewCompanyModal({ isOpen, onClose }: NewCompanyModalProps) {
             </button>
             <button
               type="submit"
-              disabled={createCompanyMutation.isPending}
+              disabled={loading}
               className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {createCompanyMutation.isPending ? "Criando..." : "Criar Empresa"}
+              {loading ? "Criando..." : "Criar Empresa"}
             </button>
           </div>
         </form>

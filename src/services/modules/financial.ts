@@ -1,93 +1,54 @@
-import { supabase } from "../supabase";
+import { api } from "../../lib/api";
 import type { BankAccount, FinancialTransaction, Budget, TransactionType, TransactionStatus } from "../../types";
 
 // Contas Bancárias
 export const bankAccountService = {
   async create(data: Omit<BankAccount, "id" | "created_at">) {
-    const { data: bankAccount, error } = await supabase.from("bank_accounts").insert(data).select().single();
-
-    if (error) throw error;
-    return bankAccount;
+    const response = await api.post("/api/financial/bank-accounts", data);
+    return response.data;
   },
 
   async update(id: string, data: Partial<BankAccount>) {
-    const { data: bankAccount, error } = await supabase
-      .from("bank_accounts")
-      .update(data)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return bankAccount;
+    const response = await api.put(`/api/financial/bank-accounts/${id}`, data);
+    return response.data;
   },
 
   async delete(id: string) {
-    const { error } = await supabase.from("bank_accounts").delete().eq("id", id);
-
-    if (error) throw error;
+    await api.delete(`/api/financial/bank-accounts/${id}`);
   },
 
   async getById(id: string) {
-    const { data: bankAccount, error } = await supabase.from("bank_accounts").select().eq("id", id).single();
-
-    if (error) throw error;
-    return bankAccount;
+    const response = await api.get(`/api/financial/bank-accounts/${id}`);
+    return response.data;
   },
 
   async list(companyId: string) {
-    const { data: bankAccounts, error } = await supabase
-      .from("bank_accounts")
-      .select()
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return bankAccounts;
+    const response = await api.get(`/api/financial/bank-accounts`, {
+      params: { companyId },
+    });
+    return response.data;
   },
 };
 
 // Transações Financeiras
 export const transactionService = {
   async create(data: Omit<FinancialTransaction, "id" | "created_at">) {
-    const { data: transaction, error } = await supabase.from("financial_transactions").insert(data).select().single();
-
-    if (error) throw error;
-    return transaction;
+    const response = await api.post("/api/financial/transactions", data);
+    return response.data;
   },
 
   async update(id: string, data: Partial<FinancialTransaction>) {
-    const { data: transaction, error } = await supabase
-      .from("financial_transactions")
-      .update(data)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return transaction;
+    const response = await api.put(`/api/financial/transactions/${id}`, data);
+    return response.data;
   },
 
   async delete(id: string) {
-    const { error } = await supabase.from("financial_transactions").delete().eq("id", id);
-
-    if (error) throw error;
+    await api.delete(`/api/financial/transactions/${id}`);
   },
 
   async getById(id: string) {
-    const { data: transaction, error } = await supabase
-      .from("financial_transactions")
-      .select(
-        `
-        *,
-        bank_account:bank_accounts(*)
-      `
-      )
-      .eq("id", id)
-      .single();
-
-    if (error) throw error;
-    return transaction;
+    const response = await api.get(`/api/financial/transactions/${id}`);
+    return response.data;
   },
 
   async list(
@@ -100,101 +61,45 @@ export const transactionService = {
       bankAccountId?: string;
     }
   ) {
-    let query = supabase
-      .from("financial_transactions")
-      .select(
-        `
-        *,
-        bank_account:bank_accounts(*)
-      `
-      )
-      .eq("company_id", companyId);
-
-    if (filters?.type) {
-      query = query.eq("type", filters.type);
-    }
-    if (filters?.status) {
-      query = query.eq("status", filters.status);
-    }
-    if (filters?.startDate) {
-      query = query.gte("due_date", filters.startDate);
-    }
-    if (filters?.endDate) {
-      query = query.lte("due_date", filters.endDate);
-    }
-    if (filters?.bankAccountId) {
-      query = query.eq("bank_account_id", filters.bankAccountId);
-    }
-
-    const { data: transactions, error } = await query.order("due_date", { ascending: true });
-
-    if (error) throw error;
-    return transactions;
+    const response = await api.get("/api/financial/transactions", {
+      params: { companyId, ...filters },
+    });
+    return response.data;
   },
 
   async getBalance(companyId: string) {
-    const { data: transactions, error } = await supabase
-      .from("financial_transactions")
-      .select()
-      .eq("company_id", companyId)
-      .eq("status", "paid");
-
-    if (error) throw error;
-
-    return transactions.reduce((acc, curr) => {
-      if (curr.type === "income") {
-        return acc + curr.amount;
-      } else {
-        return acc - curr.amount;
-      }
-    }, 0);
+    const response = await api.get("/api/financial/transactions/balance", {
+      params: { companyId },
+    });
+    return response.data;
   },
 };
 
 // Orçamentos
 export const budgetService = {
   async create(data: Omit<Budget, "id" | "created_at">) {
-    const { data: budget, error } = await supabase.from("budgets").insert(data).select().single();
-
-    if (error) throw error;
-    return budget;
+    const response = await api.post("/api/financial/budgets", data);
+    return response.data;
   },
 
   async update(id: string, data: Partial<Budget>) {
-    const { data: budget, error } = await supabase.from("budgets").update(data).eq("id", id).select().single();
-
-    if (error) throw error;
-    return budget;
+    const response = await api.put(`/api/financial/budgets/${id}`, data);
+    return response.data;
   },
 
   async delete(id: string) {
-    const { error } = await supabase.from("budgets").delete().eq("id", id);
-
-    if (error) throw error;
+    await api.delete(`/api/financial/budgets/${id}`);
   },
 
   async getById(id: string) {
-    const { data: budget, error } = await supabase.from("budgets").select().eq("id", id).single();
-
-    if (error) throw error;
-    return budget;
+    const response = await api.get(`/api/financial/budgets/${id}`);
+    return response.data;
   },
 
   async list(companyId: string, year?: number, month?: number) {
-    let query = supabase.from("budgets").select().eq("company_id", companyId);
-
-    if (year) {
-      query = query.eq("year", year);
-    }
-    if (month) {
-      query = query.eq("month", month);
-    }
-
-    const { data: budgets, error } = await query
-      .order("year", { ascending: false })
-      .order("month", { ascending: false });
-
-    if (error) throw error;
-    return budgets;
+    const response = await api.get("/api/financial/budgets", {
+      params: { companyId, year, month },
+    });
+    return response.data;
   },
 };

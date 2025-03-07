@@ -65,9 +65,10 @@ model Customer {
   opportunities Opportunity[]
   quotes        Quote[]
   orders        Order[]
-  receivables   Receivable[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
+
+  @@map("customers")
 }
 
 enum CustomerType {
@@ -91,6 +92,8 @@ model Interaction {
   userId      String
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+
+  @@map("interactions")
 }
 
 enum InteractionType {
@@ -115,6 +118,8 @@ model Opportunity {
   quotes      Quote[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+
+  @@map("opportunities")
 }
 
 enum OpportunityStatus {
@@ -142,6 +147,8 @@ model Quote {
   validUntil    DateTime
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@map("quotes")
 }
 
 enum QuoteStatus {
@@ -165,6 +172,8 @@ model QuoteItem {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("quote_items")
 }
 
 model Product {
