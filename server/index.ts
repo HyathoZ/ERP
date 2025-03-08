@@ -15,7 +15,6 @@ declare global {
       email: string;
       name: string;
       role: Role;
-      active: boolean;
     }
 
     interface Request {
@@ -40,7 +39,9 @@ const JWT_SECRET = process.env.JWT_SECRET;
 app.use(helmet());
 
 // Configuração do CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:5173"];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+  "http://localhost:5173",
+];
 app.use(
   cors({
     origin: allowedOrigins,
@@ -75,7 +76,11 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // Middleware de autenticação
-const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+const authenticate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -128,7 +133,11 @@ router.post("/auth/register", async (req: Request, res: Response) => {
       },
     });
 
-    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
     res.json({
       user: {
@@ -163,7 +172,11 @@ router.post("/auth/login", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Credenciais inválidas" });
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
     res.json({
       user: {
@@ -295,7 +308,9 @@ const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || "localhost";
 
 const server = app.listen(PORT, HOST, () => {
-  console.log(`[${new Date().toISOString()}] Servidor iniciado em http://${HOST}:${PORT}`);
+  console.log(
+    `[${new Date().toISOString()}] Servidor iniciado em http://${HOST}:${PORT}`
+  );
   console.log(`Origens permitidas: ${allowedOrigins.join(", ")}`);
   console.log(`Ambiente: ${process.env.NODE_ENV || "development"}`);
 });
